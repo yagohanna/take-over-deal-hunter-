@@ -53,3 +53,30 @@ Open `http://localhost:4173`, load the sample subject-to deal, change inputs, ve
 The repository is a plain HTML/CSS/JavaScript site. `index.html` references `./src/styles.css` and `./src/app.js` with relative paths, so it works beneath a repository URL such as `https://OWNER.github.io/REPOSITORY/`.
 
 For deployment directly from the default branch, in **Settings → Pages** choose **Deploy from a branch**, select the branch and `/ (root)`, then save. Alternatively, a Pages workflow can run `npm run build` and publish the generated `dist/` directory. The build script copies the static entry point and source assets without rewriting their relative URLs. No secrets or environment variables are needed.
+
+## Deal Summary & Recommendation
+
+The report is created only after **Calculate Deal** is selected. It groups the property, financing, and performance figures used in the analysis, records the generation time, and distinguishes unavailable values as **Unknown** or **Needs verification**. The copy button produces a plain-text version suitable for email or deal notes; no report data leaves the browser.
+
+### Overall grade
+
+Grades are assigned by deterministic rules in `src/calculator.js`, not by an external service or subjective AI model. A negative monthly cash flow, DSCR below 1.00, or failure of a configured minimum cash-flow, cap-rate, or cash-on-cash target produces **REJECT**. Subject to that screen:
+
+- **A — Strong Deal:** positive cash flow; DSCR of at least 1.25 (or no debt service); cash to close within the entered maximum; stabilized cap-on-cost of at least 12% or cash-on-cash return of at least 20%; and no missing price, income, or material existing-loan documentation.
+- **B — Promising Deal:** positive cash flow; DSCR of at least 1.15 (or no debt service); stabilized cap-on-cost from 9% through 11.99%; and no missing price, income, or material existing-loan documentation.
+- **C — Marginal Deal:** a non-rejected deal that does not satisfy A or B. This includes weak positive cash flow, DSCR from 1.00 through 1.14, excess cash required, lower returns, or important missing information.
+- **REJECT — Does Not Meet Targets:** the current terms fail one of the minimum sustainability or user-configured target screens above.
+
+Stabilized cap rate / cap on cost is annual NOI divided by purchase price, renovation budget, and closing costs. A configured maximum cash to close is required for an A grade. The recommendation directly maps to the resulting grade, so identical inputs always produce the same grade, explanation, and next action.
+
+### Verification before an offer
+
+The report flags blank inputs and unchecked due-diligence items; it never treats a calculated estimate as verified. Before making an offer, independently confirm the address and asking price, rent roll, leases and delinquency/occupancy status, T12 operating statement, taxes, insurance, utilities and other expenses, physical condition and renovation estimate, current loan statement and payoff, mortgage balance, interest rate, payment and escrow details, maturity date, prepayment penalty, seller-financing terms, seller cash requirement, title, and closing costs. For subject-to transactions, also have a qualified real-estate attorney and title company review the due-on-sale clause, payment status, insurance, title structure, and legal risks. The calculator does not describe subject-to financing as an approved assumption.
+
+### Print or save as PDF
+
+1. Enter the known information, mark only documentation actually verified, and select **Calculate Deal**.
+2. Review the generated grade, missing-information list, and risk flags.
+3. Select **Print / Save as PDF** in the report and choose the browser's PDF destination (commonly **Save as PDF**).
+
+Print-specific styling removes the form, navigation, and action buttons while retaining the report title, generation time, summaries, grade, explanations, applicable subject-to warning, recommendation, and verification footer. For best results, enable background graphics in the browser print dialog so the grade color is retained.

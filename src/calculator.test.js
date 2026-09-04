@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { calculateDeal, getStatuses, monthlyLoanPayment } from './calculator.js';
+import { assessDeal, calculateDeal, getStatuses, monthlyLoanPayment } from './calculator.js';
 
 const sample = {units:2,purchasePrice:285000,currentValue:310000,renovationBudget:12000,closingCosts:4500,operatingReserves:6000,rentalIncome:3400,otherIncome:100,vacancy:5,propertyTaxes:310,insurance:145,utilities:100,maintenance:200,management:0,capex:175,hoa:0,financingType:'subjectTo',existingMortgageBalance:228000,interestRate:3.25,remainingAmortization:25,existingMonthlyPayment:1111,sellerCashRequired:18000,targetCapRate:10};
 
@@ -36,4 +36,23 @@ test('applies requested status thresholds',()=>{
   assert.deepEqual(getStatuses({dscr:1.25,monthlyCashFlow:1,cashToCloseRatio:.05,currentCapRate:.12}),{dscr:'green',cashFlow:'green',cashToClose:'green',capRate:'green'});
   assert.deepEqual(getStatuses({dscr:1.1,monthlyCashFlow:0,cashToCloseRatio:.1,currentCapRate:.09}),{dscr:'yellow',cashFlow:'red',cashToClose:'yellow',capRate:'yellow'});
   assert.deepEqual(getStatuses({dscr:1.09,monthlyCashFlow:-1,cashToCloseRatio:.101,currentCapRate:.089}),{dscr:'red',cashFlow:'red',cashToClose:'red',capRate:'red'});
+});
+
+const verified = {propertyAddress:'1 Main St',purchasePrice:100000,rentalIncome:2000,propertyTaxes:100,insurance:100,renovationBudget:5000,maxCashToClose:30000,rentRollVerified:true,t12Verified:true,occupancyVerified:true,financingType:'conventional'};
+test('assigns deterministic A, B, C, and reject grades',()=>{
+  const aInput={...verified,currentValue:120000,afterRepairValue:150000,downPayment:20000,interestRate:0,remainingAmortization:30};
+  assert.equal(assessDeal(calculateDeal(aInput),aInput).code,'a');
+  const bInput={...verified,purchasePrice:200000,currentValue:200000,renovationBudget:0,downPayment:40000,interestRate:5,remainingAmortization:30,rentalIncome:2300,propertyTaxes:300,insurance:200};
+  assert.equal(assessDeal(calculateDeal(bInput),bInput).code,'b');
+  const cInput={...verified,purchasePrice:250000,downPayment:50000,interestRate:7,remainingAmortization:30,rentalIncome:2300,propertyTaxes:300,insurance:200};
+  assert.equal(assessDeal(calculateDeal(cInput),cInput).code,'c');
+  const rejectInput={...verified,purchasePrice:250000,downPayment:0,interestRate:12,remainingAmortization:15,rentalIncome:1000};
+  assert.equal(assessDeal(calculateDeal(rejectInput),rejectInput).code,'reject');
+});
+
+test('reports unverified subject-to information and its deterministic risks',()=>{
+  const input={financingType:'subjectTo',purchasePrice:200000,rentalIncome:2000,existingMortgageBalance:150000,existingMonthlyPayment:900};
+  const assessment=assessDeal(calculateDeal(input),input);
+  assert.ok(assessment.missing.some(item=>item.includes('loan statement')));
+  assert.ok(assessment.risks.includes('Subject-to due-on-sale risk'));
 });
