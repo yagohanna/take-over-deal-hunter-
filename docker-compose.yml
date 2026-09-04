@@ -1,0 +1,11 @@
+services:
+  api:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      DATABASE_URL: sqlite:////app/data/deal_hunter.db
+      CORS_ORIGINS: '["http://localhost:3000"]'
+    volumes: ["deal-data:/app/data"]
+    command: sh -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000"
+volumes:
+  deal-data:
