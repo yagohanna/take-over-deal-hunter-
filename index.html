@@ -1,106 +1,17 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Quickly analyze real estate takeover deals and estimate monthly cash flow." />
-    <title>Takeover Deal Hunter</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./src/styles.css" />
-  </head>
-  <body>
-    <header class="site-header">
-      <a class="brand" href="#top" aria-label="Takeover Deal Hunter home">
-        <span class="brand-mark" aria-hidden="true"><span></span></span>
-        <span>Takeover<span>Deal Hunter</span></span>
-      </a>
-      <a class="header-link" href="#analyzer">Analyze a deal <span aria-hidden="true">→</span></a>
-    </header>
-
-    <main id="top">
-      <section class="hero">
-        <div class="hero-copy">
-          <div class="eyebrow"><span></span> Smarter real estate decisions</div>
-          <h1>Find the upside in every <em>takeover deal.</em></h1>
-          <p>Run the numbers in seconds. Understand your cash flow, equity position, and deal potential before you make a move.</p>
-          <a class="primary-button" href="#analyzer">Analyze your first deal <span aria-hidden="true">↗</span></a>
-          <div class="trust-note"><span>✓</span> Free to use &nbsp;·&nbsp; No sign-up required</div>
-        </div>
-
-        <aside class="snapshot" aria-label="Example deal snapshot">
-          <div class="snapshot-top">
-            <div><small>DEAL SNAPSHOT</small><strong>Oakridge Duplex</strong></div>
-            <span class="status"><i></i> Positive</span>
-          </div>
-          <div class="cash-card">
-            <span>MONTHLY CASH FLOW</span>
-            <strong>+$742</strong>
-            <small>+$8,904 annually</small>
-          </div>
-          <div class="mini-grid">
-            <div><span>Purchase price</span><strong>$285,000</strong></div>
-            <div><span>Existing debt</span><strong>$228,000</strong></div>
-            <div><span>Monthly rent</span><strong>$3,200</strong></div>
-            <div><span>Interest rate</span><strong>3.75%</strong></div>
-          </div>
-          <div class="snapshot-footer"><span>Debt coverage</span><strong>1.42x</strong><div><i style="width: 71%"></i></div></div>
-        </aside>
-      </section>
-
-      <section class="analyzer-section" id="analyzer">
-        <div class="section-heading">
-          <div><span class="step-label">THE QUICK ANALYZER</span><h2>Does this deal make sense?</h2></div>
-          <p>Enter the deal details below. We’ll calculate the real monthly cash flow as you type.</p>
-        </div>
-
-        <div class="analyzer-layout">
-          <form class="deal-form" id="deal-form">
-            <div class="form-section">
-              <div class="form-title"><span>01</span><div><h3>Deal structure</h3><p>Property price and the debt you’ll take over</p></div></div>
-              <div class="field-grid">
-                <label>Purchase price<div class="input-wrap"><span>$</span><input id="purchasePrice" type="number" min="0" step="1000" value="285000" /></div></label>
-                <label>Existing debt balance<div class="input-wrap"><span>$</span><input id="debtBalance" type="number" min="0" step="1000" value="228000" /></div></label>
-                <label>Interest rate<div class="input-wrap suffix"><input id="interestRate" type="number" min="0" step="0.01" value="3.75" /><span>%</span></div></label>
-                <label>Monthly debt payment<div class="input-wrap"><span>$</span><input id="debtPayment" type="number" min="0" step="50" value="1450" /></div></label>
-              </div>
-            </div>
-
-            <div class="form-section">
-              <div class="form-title"><span>02</span><div><h3>Monthly operations</h3><p>Income and the costs of running the property</p></div></div>
-              <div class="field-grid">
-                <label>Rental income<div class="input-wrap"><span>$</span><input id="rentalIncome" type="number" min="0" step="50" value="3200" /></div></label>
-                <label>Operating expenses<div class="input-wrap"><span>$</span><input id="operatingExpenses" type="number" min="0" step="25" value="650" /></div><small>Taxes, insurance, utilities, management</small></label>
-                <label>Vacancy<div class="input-wrap suffix"><input id="vacancy" type="number" min="0" max="100" step="0.5" value="5" /><span>%</span></div></label>
-                <label>Repairs &amp; reserves<div class="input-wrap"><span>$</span><input id="repairs" type="number" min="0" step="25" value="200" /></div><small>Estimated monthly allowance</small></label>
-              </div>
-            </div>
-            <button class="reset-button" type="reset"><span aria-hidden="true">↺</span> Reset example</button>
-          </form>
-
-          <aside class="results-card" aria-live="polite">
-            <div class="results-heading"><span>YOUR ESTIMATE</span><i id="deal-status">Cash-flow positive</i></div>
-            <div class="main-result"><span>Estimated monthly cash flow</span><strong id="cashFlow">+$740</strong><small id="annualCashFlow">+$8,880 per year</small></div>
-            <div class="result-lines">
-              <div><span>Gross rental income</span><strong id="grossIncome">$3,200</strong></div>
-              <div><span>Vacancy loss</span><strong class="expense" id="vacancyLoss">−$160</strong></div>
-              <div><span>Operating expenses</span><strong class="expense" id="expenseTotal">−$650</strong></div>
-              <div><span>Repairs &amp; reserves</span><strong class="expense" id="repairTotal">−$200</strong></div>
-              <div><span>Debt payment</span><strong class="expense" id="paymentTotal">−$1,450</strong></div>
-            </div>
-            <div class="metric-grid">
-              <div><span>Cash needed<sup title="Purchase price minus existing debt">?</sup></span><strong id="cashNeeded">$57,000</strong></div>
-              <div><span>Debt coverage<sup title="Net operating income divided by debt payment">?</sup></span><strong id="debtCoverage">1.51x</strong></div>
-            </div>
-            <div class="result-callout" id="result-callout"><span>↑</span><p><strong>Promising start.</strong><br />This deal produces positive monthly cash flow.</p></div>
-            <p class="disclaimer">Estimates only. Verify all figures and consult a qualified professional before making an investment decision.</p>
-          </aside>
-        </div>
-      </section>
-    </main>
-
-    <footer><div class="brand small"><span class="brand-mark"><span></span></span><span>Takeover<span>Deal Hunter</span></span></div><p>Built for investors who look beyond the listing price.</p><span>© 2026 Takeover Deal Hunter</span></footer>
-    <script type="module" src="./src/app.js"></script>
-  </body>
-</html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Analyze real estate acquisitions and creative-financing deals."><title>Takeover Deal Hunter</title><link rel="stylesheet" href="./src/styles.css"></head>
+<body><header class="site-header"><a class="brand" href="#top"><span class="brand-mark">⌂</span><span>Takeover <b>Deal Hunter</b></span></a><a href="#analyzer">Analyze a deal →</a></header>
+<main id="top"><section class="hero"><div><p class="eyebrow">ACQUISITION UNDERWRITING, SIMPLIFIED</p><h1>See the whole deal.<br><em>Before you close.</em></h1><p>Model operations, conventional debt, assumptions, subject-to financing, and seller carryback terms in one private, browser-based calculator.</p><a class="primary-button" href="#analyzer">Build your deal →</a></div><aside class="hero-card"><span>DEAL LENS</span><h2>Income. Debt. Cash.</h2><p>Understand what a property earns, what the financing costs, and how much capital the acquisition requires.</p><div><b>100%</b><small>Runs locally</small><b>0</b><small>Sign-ups</small></div></aside></section>
+<section id="analyzer" class="analyzer-section"><div class="section-heading"><div><span>FULL DEAL ANALYZER</span><h2>Underwrite with confidence.</h2></div><p>Enter known figures and leave optional inputs blank. Unverified calculated values are clearly identified as estimates.</p></div>
+<div id="validation-summary" class="validation-summary" role="alert" hidden></div>
+<form id="deal-form" novalidate><div class="workspace"><div class="input-column">
+<fieldset><legend><i>01</i><span>Property information<small>Acquisition basis and asset profile</small></span></legend><div class="field-grid">
+<label class="wide">Property address<input id="propertyAddress" type="text" placeholder="123 Main Street, City, ST"></label><label>Property type<select id="propertyType"><option>Single Family</option><option>2–4 Units</option><option>Multifamily 5+ Units</option></select></label><label>Number of units<input id="units" type="number" min="1" step="1"></label>
+<label>Purchase price<div class="money"><span>$</span><input id="purchasePrice" type="number" min="0"></div></label><label>Estimated current value<div class="money"><span>$</span><input id="currentValue" type="number" min="0"></div></label><label>Estimated after-repair value<div class="money"><span>$</span><input id="afterRepairValue" type="number" min="0"></div></label><label>Renovation budget<div class="money"><span>$</span><input id="renovationBudget" type="number" min="0"></div></label><label>Closing costs<div class="money"><span>$</span><input id="closingCosts" type="number" min="0"></div></label><label>Initial operating reserves<div class="money"><span>$</span><input id="operatingReserves" type="number" min="0"></div></label></div></fieldset>
+<fieldset><legend><i>02</i><span>Property income<small>Recurring monthly revenue</small></span></legend><div class="field-grid"><label>Monthly rental income<div class="money"><span>$</span><input id="rentalIncome" type="number" min="0"></div></label><label>Monthly other income<div class="money"><span>$</span><input id="otherIncome" type="number" min="0"></div></label><label>Vacancy percentage<div class="percent"><input id="vacancy" type="number" min="0" max="100" step=".1"><span>%</span></div></label></div></fieldset>
+<fieldset><legend><i>03</i><span>Operating expenses<small>Monthly owner-paid costs</small></span></legend><div class="field-grid"><label>Property taxes<div class="money"><span>$</span><input id="propertyTaxes" type="number" min="0"></div></label><label>Insurance<div class="money"><span>$</span><input id="insurance" type="number" min="0"></div></label><label>Owner-paid utilities<div class="money"><span>$</span><input id="utilities" type="number" min="0"></div></label><label>Maintenance &amp; repairs<div class="money"><span>$</span><input id="maintenance" type="number" min="0"></div></label><label>Property management<div class="money"><span>$</span><input id="management" type="number" min="0"></div></label><label>Capital expenditure reserve<div class="money"><span>$</span><input id="capex" type="number" min="0"></div></label><label>HOA or other expenses<div class="money"><span>$</span><input id="hoa" type="number" min="0"></div></label></div></fieldset>
+<fieldset><legend><i>04</i><span>Financing structure<small>Senior debt, seller terms, and cure costs</small></span></legend><div class="field-grid"><label class="wide">Structure<select id="financingType"><option value="conventional">Conventional Loan</option><option value="assumption">Existing Loan Assumption</option><option value="subjectTo">Subject-To Existing Loan</option><option value="sellerFinancing">Seller Financing</option><option value="existingPlusSeller">Existing Loan Plus Seller Financing</option></select></label><label>Down payment<div class="money"><span>$</span><input id="downPayment" type="number" min="0"></div></label><label>Existing mortgage balance<div class="money"><span>$</span><input id="existingMortgageBalance" type="number" min="0"></div></label><label>Interest rate<div class="percent"><input id="interestRate" type="number" min="0" step=".01"><span>%</span></div></label><label>Remaining amortization (years)<input id="remainingAmortization" type="number" min="0" step=".1"></label><label>Existing monthly payment (optional)<div class="money"><span>$</span><input id="existingMonthlyPayment" type="number" min="0"></div><small>Enter a verified payment or leave blank to estimate.</small></label><label>Seller-financed amount<div class="money"><span>$</span><input id="sellerFinancedAmount" type="number" min="0"></div></label><label>Seller-financing interest rate<div class="percent"><input id="sellerInterestRate" type="number" min="0" step=".01"><span>%</span></div></label><label>Seller-financing amortization (years)<input id="sellerAmortization" type="number" min="0" step=".1"></label><label>Seller-financing balloon term (years)<input id="sellerBalloonTerm" type="number" min="0" step=".1"></label><label>Seller cash required at closing<div class="money"><span>$</span><input id="sellerCashRequired" type="number" min="0"></div></label><label>Mortgage arrears<div class="money"><span>$</span><input id="mortgageArrears" type="number" min="0"></div></label><label>Delinquent taxes<div class="money"><span>$</span><input id="delinquentTaxes" type="number" min="0"></div></label><label>Loan assumption fee<div class="money"><span>$</span><input id="assumptionFee" type="number" min="0"></div></label></div><div id="subject-warning" class="warning" hidden><b>Subject-to risk</b> Subject-to transactions may trigger a due-on-sale clause. Existing loan terms, payoff, payment status, insurance requirements, and legal structure must be verified before closing.</div></fieldset>
+<fieldset><legend><i>05</i><span>Targets<small>Your investment thresholds</small></span></legend><div class="field-grid"><label>Target cap rate<div class="percent"><input id="targetCapRate" type="number" min="0" step=".1"><span>%</span></div></label><label>Target monthly cash flow<div class="money"><span>$</span><input id="targetCashFlow" type="number" min="0"></div></label><label>Target cash-on-cash return<div class="percent"><input id="targetCoc" type="number" min="0" step=".1"><span>%</span></div></label><label>Maximum desired cash to close<div class="money"><span>$</span><input id="maxCashToClose" type="number" min="0"></div></label></div></fieldset>
+<div class="actions"><button class="primary" type="submit">Calculate Deal</button><button type="reset">Reset</button><button id="sample-button" type="button">Load Sample Deal</button><button id="print-button" type="button">Print or Save Deal Summary</button></div></div>
+<aside class="results" aria-live="polite"><div class="results-head"><span>DEAL SUMMARY</span><b id="overall-status" class="status">Waiting for inputs</b></div><h2 id="result-address">Prospective acquisition</h2><div class="score-grid"><article id="status-dscr"><small>DSCR</small><strong data-result="dscr">—</strong></article><article id="status-cashFlow"><small>Monthly cash flow</small><strong data-result="monthlyCashFlow">$0</strong></article><article id="status-cashToClose"><small>Cash to close</small><strong data-result="totalCashToClose">$0</strong></article><article id="status-capRate"><small>Stabilized cap rate</small><strong data-result="currentCapRate">—</strong></article></div><div id="estimate-note" class="estimate-note"></div><dl id="metrics"></dl><p class="disclaimer">Planning estimates only—not financial, tax, or legal advice. Verify loan statements, title, insurance, taxes, rents, expenses, and legal structure with qualified professionals.</p></aside>
+</div></form></section></main><footer><div class="brand"><span class="brand-mark">⌂</span><span>Takeover <b>Deal Hunter</b></span></div><p>Private, deterministic deal analysis in your browser.</p><span>© 2026</span></footer><script type="module" src="./src/app.js"></script></body></html>
