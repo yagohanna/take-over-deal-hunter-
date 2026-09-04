@@ -39,6 +39,7 @@ export function calculateDeal(input = {}) {
   const annualDebtService = monthlyDebtService * 12;
   const annualCashFlow = monthlyCashFlow * 12;
   const totalDebt = firstMortgageBalance + sellerFinancedAmount;
+  const totalProjectCost = purchasePrice + n('renovationBudget') + n('closingCosts');
 
   return {
     units, purchasePrice, grossMonthlyIncome, grossAnnualIncome: grossMonthlyIncome * 12,
@@ -46,6 +47,8 @@ export function calculateDeal(input = {}) {
     monthlyOperatingExpenses, annualOperatingExpenses: monthlyOperatingExpenses * 12,
     monthlyNOI, annualNOI,
     currentCapRate: currentValue > 0 ? annualNOI / currentValue : null,
+    stabilizedCapRate: totalProjectCost > 0 ? annualNOI / totalProjectCost : null,
+    totalProjectCost, currentValue, afterRepairValue: n('afterRepairValue'), renovationBudget: n('renovationBudget'), totalDebt,
     targetCapPrice: n('targetCapRate') > 0 ? annualNOI / (n('targetCapRate') / 100) : null,
     firstMortgageBalance, firstMortgagePayment, calculatedFirstPayment,
     firstPaymentIsEstimate: !(usesExistingLoan && enteredPayment > 0),
@@ -59,6 +62,64 @@ export function calculateDeal(input = {}) {
     cashToCloseRatio: purchasePrice > 0 ? totalCashToClose / purchasePrice : null,
     financingType,
   };
+}
+
+export function assessDeal(result, input = {}) {
+  const present = key => String(input[key] ?? '').trim() !== '' && Number(input[key]) > 0;
+  const usesExisting = ['assumption', 'subjectTo', 'existingPlusSeller'].includes(result.financingType);
+  const usesSeller = ['sellerFinancing', 'existingPlusSeller'].includes(result.financingType);
+  const missing = [];
+  if (!String(input.propertyAddress || '').trim()) missing.push('Property address — Unknown');
+  if (!present('purchasePrice')) missing.push('Asking price — Unknown');
+  if (!present('rentalIncome')) missing.push('Current rental income — Unknown');
+  if (!input.rentRollVerified) missing.push('Current rent roll — Needs verification');
+  if (!input.t12Verified) missing.push('T12 financial statement — Needs verification');
+  if (!present('propertyTaxes')) missing.push('Property taxes — Unknown');
+  if (!present('insurance')) missing.push('Insurance — Unknown');
+  if (!present('renovationBudget')) missing.push('Renovation estimate — Unknown or needs verification');
+  if (!input.occupancyVerified) missing.push('Occupancy and delinquency information — Needs verification');
+  if (usesExisting) {
+    if (!present('existingMortgageBalance')) missing.push('Existing mortgage balance — Unknown');
+    if (!input.loanStatementVerified) missing.push('Existing loan statement and balance — Needs verification');
+    if (!input.rateVerified) missing.push('Interest rate and monthly payment — Needs verification');
+    if (!input.loanMaturityDate) missing.push('Loan maturity date — Unknown');
+    if (!input.prepaymentPenalty) missing.push('Prepayment penalty — Unknown');
+  }
+  if (usesSeller && (!present('sellerFinancedAmount') || !present('sellerAmortization'))) missing.push('Seller financing terms — Unknown');
+  if (result.financingType !== 'conventional' && !present('sellerCashRequired')) missing.push('Seller cash requirement — Unknown');
+
+  const dscrOk = result.dscr === null ? result.monthlyDebtService === 0 : result.dscr >= 1.25;
+  const cashWithin = present('maxCashToClose') && result.totalCashToClose <= Number(input.maxCashToClose);
+  const exceptionalCoc = result.cashOnCashReturn !== null && result.cashOnCashReturn >= .20;
+  const majorMissing = !present('purchasePrice') || !present('rentalIncome') || (usesExisting && (!present('existingMortgageBalance') || !input.loanStatementVerified));
+  const missesTargets = (present('targetCashFlow') && result.monthlyCashFlow < Number(input.targetCashFlow)) || (present('targetCapRate') && (result.stabilizedCapRate === null || result.stabilizedCapRate < Number(input.targetCapRate) / 100)) || (present('targetCoc') && (result.cashOnCashReturn === null || result.cashOnCashReturn < Number(input.targetCoc) / 100));
+  let code;
+  if (result.monthlyCashFlow < 0 || (result.dscr !== null && result.dscr < 1) || missesTargets) code = 'reject';
+  else if (result.monthlyCashFlow > 0 && dscrOk && cashWithin && ((result.stabilizedCapRate ?? 0) >= .12 || exceptionalCoc) && !majorMissing) code = 'a';
+  else if (result.monthlyCashFlow > 0 && (result.dscr === null || result.dscr >= 1.15) && (result.stabilizedCapRate ?? 0) >= .09 && (result.stabilizedCapRate ?? 0) < .12 && !majorMissing) code = 'b';
+  else code = 'c';
+  const labels = {a:'A — Strong Deal',b:'B — Promising Deal',c:'C — Marginal Deal',reject:'REJECT — Does Not Meet Targets'};
+  const recommendations = {a:'Pursue immediately. Request supporting documents and begin financing and legal review.',b:'Continue evaluating. Negotiate terms and verify the missing financial information.',c:'Proceed cautiously. The deal needs a lower price, better financing terms, or improved income.',reject:'Do not proceed under the current terms. Renegotiate substantially or reject the opportunity.'};
+  const why = [];
+  if (result.monthlyCashFlow > 500) why.push('Strong monthly cash flow'); else if (result.monthlyCashFlow > 0) why.push('Positive monthly cash flow');
+  if (usesExisting && Number(input.interestRate) > 0 && Number(input.interestRate) <= 4) why.push('Low-rate existing debt');
+  if (cashWithin) why.push('Cash to close is within the configured target');
+  if ((result.stabilizedCapRate ?? 0) >= .12) why.push('High stabilized cap rate');
+  if ((result.dscr ?? 0) >= 1.25) why.push('Strong DSCR');
+  if (result.afterRepairValue > result.totalProjectCost) why.push('Renovation may create meaningful equity');
+  if (usesSeller && result.sellerFinancedAmount > 0) why.push('Seller financing reduces cash required at closing');
+  const risks = [];
+  if (result.monthlyCashFlow <= 0) risks.push('Negative cash flow'); else if (result.monthlyCashFlow < 300) risks.push('Weak cash flow');
+  if (result.dscr !== null && result.dscr < 1.15) risks.push('Low DSCR');
+  if (present('maxCashToClose') && !cashWithin) risks.push('Cash requirement exceeds the configured maximum');
+  if (result.renovationBudget > result.purchasePrice * .2) risks.push('Large renovation budget relative to purchase price');
+  if (Number(input.sellerBalloonTerm) > 0) risks.push(`Seller-financing balloon payment in ${Number(input.sellerBalloonTerm)} years`);
+  if (Number(input.remainingAmortization) > 0 && Number(input.remainingAmortization) < 10) risks.push('Short remaining loan term');
+  if (Number(input.vacancy) >= 10) risks.push('High vacancy assumption');
+  if (!input.rentRollVerified || !input.t12Verified) risks.push('Performance depends on unverified projected rents or expenses');
+  if (usesExisting && !input.loanStatementVerified) risks.push('Existing mortgage terms are not verified');
+  if (result.financingType === 'subjectTo') risks.push('Subject-to due-on-sale risk');
+  return {code, label: labels[code], recommendation: recommendations[code], why: why.length ? why : ['No calculated strengths identified yet'], risks: risks.length ? risks : ['No calculation-based risk flags identified'], missing};
 }
 
 export function getStatuses(result) {
