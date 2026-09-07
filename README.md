@@ -49,7 +49,13 @@ old response as if it analyzed the new inputs.
 
 ## Access and deployment
 
-The current API has no authentication or per-user access controls. Saved records are accessible
+**Abrir mi bandeja** opens the acquisitions inbox on the API origin. It has its own owner sign-in;
+the public calculator stays unchanged. The destination derives from `src/config.js` and points to
+localhost during preview. No private inbox data or session credentials are loaded into this frontend.
+Deploy and configure the private backend inbox before publishing this entry point. Its login, source
+labels, contact history and synchronization are documented in the private backend repository.
+
+The calculator's saved-analysis API has no authentication or per-user access controls. Saved records are accessible
 without signing in. This integration is suitable only for non-confidential screening data until
 access control is implemented in a separately approved phase. CORS restricts browser origins but
 is not authentication. No documents, credentials, Gmail, AI, scraping or outreach are added here.
