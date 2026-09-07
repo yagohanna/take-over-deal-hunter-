@@ -1,43 +1,58 @@
-# Takeover Deal Hunter — Private Backend
+# Takeover Deal Hunter — Public Frontend
 
-Phase 1 is a private, local FastAPI foundation for BUYREBSELL CORP. It stores properties and loan evidence, performs deterministic Decimal-based underwriting, grades deals, and explicitly tracks unknown or estimated information. It does **not** scrape, email, call paid APIs, make offers, or infer personal vulnerability. This repository also retains the pre-existing static calculator files; the backend does not add a public landing page.
+Static HTML/CSS/JavaScript calculator for BUYREBSELL CORP. This is the public GitHub Pages
+repository. The authoritative API lives in the separate private sibling `../backend` repository.
+Legacy Python backend files are retained here for a separate preservation review; do not deploy
+or extend them as the API. No server code is included in the static `dist/` build.
 
-## Project structure
+## Run and test
 
-- `main.py`, `app/main.py` — ASGI entrypoint and CORS
-- `app/api/` — property, loan, deal, analysis, and buy-box routes
-- `app/models/`, `app/schemas/` — SQLAlchemy tables and strict Pydantic contracts
-- `app/calculations/`, `app/services/` — financial math, grading, and fixture loader
-- `app/database/`, `app/core/` — sessions and environment/buy-box configuration
-- `alembic/` — database migrations; `data/` — local database and six demo cases
-- `tests/` — calculation, safety, verification, grading, and API tests
-- `docs/` — operational notes
-
-## Install and run (Python 3.12)
+No runtime or development npm dependencies are needed. With Node.js and Python 3 installed:
 
 ```bash
-uv sync
-cp .env.example .env
-uv run alembic upgrade head
-uv run python -m app.services.load_demo
-uv run uvicorn main:app --reload
+npm test
+npm run build
+npm run preview
 ```
 
-Open `http://127.0.0.1:8000/docs`. Run tests with `uv run pytest`.
+The package scripts run `node --test src/*.test.js`, build `dist/`, and serve it on port 4173.
+`npm run dev` serves the source without a build. All asset/module URLs are relative and work
+under `/take-over-deal-hunter-/` on GitHub Pages, whose current source is `main` at the repository root.
 
-PostgreSQL is supported by setting `DATABASE_URL=postgresql+psycopg://user:password@host/database`. Set `CORS_ORIGINS` to a JSON list (or comma-separated origins) containing only the future GitHub Pages origin. Wildcard origins are rejected.
+## Calculator and saved analyses
 
-## API examples
+- **Calculate Deal**, live edits, the sample, copy, and print/PDF stay in the browser.
+- **Save & analyze current deal** explicitly sends the property and financial inputs to the API.
+- Complete the address, city/state/ZIP and every amount included in financial totals before saving.
+  Blank amounts are not silently sent as zero. Enter zero only when known; optional value estimates
+  and unit count can stay unknown. Payment estimates require principal, rate and amortization.
+- **Refresh saved deals** and **Load saved summary** retrieve persisted results and evidence labels.
+- Saved analyses use the API's standard DSCR/cash-on-cash grading. The browser grade also includes
+  personal targets and due-diligence gaps. Current cap rate in the browser is based on current value;
+  the saved summary clearly labels its cap rate on purchase price. Both cap-on-cost calculations
+  include purchase, renovation and closing costs for new analyses.
+- Subject-to and hybrid existing-loan/seller-financing summaries include the due-on-sale warning.
+  A proposed assumption is kept distinct and requires lender approval.
 
-```bash
-curl http://127.0.0.1:8000/health
-curl http://127.0.0.1:8000/api/config/buy-box
-curl -X POST http://127.0.0.1:8000/api/properties -H 'Content-Type: application/json' -d '{"address":"1 Main St","city":"Cleveland","state":"OH","zip_code":"44101","property_type":"Single Family"}'
-curl -X POST http://127.0.0.1:8000/api/deals/analyze -H 'Content-Type: application/json' -d '{"financing_structure":"SUBJECT_TO","purchase_price":150000,"monthly_rental_income":2500,"monthly_operating_expenses":650,"existing_monthly_debt_payment":700,"verification_statuses":{"payoff":"UNKNOWN"}}'
-```
+`src/config.js` isolates the public Render base URL and timeout settings. On localhost/127.0.0.1,
+preview uses `http://127.0.0.1:8000`; all deployed hosts use the configured public Render URL.
+Start the private backend locally with `CORS_ORIGINS=http://127.0.0.1:4173` for browser tests.
+Never add secrets to this repository or browser JavaScript.
 
-Analysis persists a deal only when sufficient income and expense inputs exist. Missing values remain null and are returned in `missing_information`; `ESTIMATED` and `UNKNOWN` items produce risk flags rather than silently becoming verified.
+The client allows 75 seconds per request and shows a waking-service message after 4 seconds.
+It does not automatically retry writes. In-flight controls prevent repeated clicks; SHA-256
+payload digests and random UUID request keys in session storage let a user retry identical inputs
+after an uncertain response. Only digests/keys are stored there, never addresses or financial inputs.
+The backend atomically records keys to prevent duplicate rows, including concurrent requests.
+A network failure never removes the browser calculation. Edits during a save do not display the
+old response as if it analyzed the new inputs.
 
-## Future integration
+## Access and deployment
 
-The existing GitHub Pages calculator can later call the JSON API after its exact origin is placed in `CORS_ORIGINS`; authentication, rate limits, CSRF/threat review, and HTTPS should precede public connectivity. Separate later phases may add consented Gmail workflows, licensed ATTOM/MLS data, and OpenAI-assisted review behind service interfaces. Those integrations will require scoped secrets, source attribution, human review, and vendor/legal approval. For cloud deployment, switch to managed PostgreSQL, run Alembic in the release step, place the container behind authenticated HTTPS, centralize audit logs, back up data, and use a secrets manager.
+The current API has no authentication or per-user access controls. Saved records are accessible
+without signing in. This integration is suitable only for non-confidential screening data until
+access control is implemented in a separately approved phase. CORS restricts browser origins but
+is not authentication. No documents, credentials, Gmail, AI, scraping or outreach are added here.
+
+Review and deploy the private backend PR before this frontend PR. The older API does not accept
+all new fields or request keys. Do not merge either PR without the owner's approval.
