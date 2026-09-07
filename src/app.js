@@ -1,4 +1,5 @@
 import { calculateDeal, assessDeal } from './calculator.js';
+import { initSavedDeals } from './saved-deals.js';
 
 const form = document.querySelector('#deal-form');
 const inputs = [...form.querySelectorAll('input, select')];
@@ -34,8 +35,9 @@ function update() {
   const result = calculateDeal(raw);
   const assessment = assessDeal(result, raw);
   const generated = new Date();
+  const address = [raw.propertyAddress, raw.propertyCity, [raw.propertyState, raw.propertyZip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
   const propertyRows = [
-    ['Property address',knownText(raw.propertyAddress)],['Property type',knownText(raw.propertyType)],['Number of units',raw.units ? String(result.units) : 'Unknown'],
+    ['Property address',knownText(address)],['Property type',knownText(raw.propertyType)],['Number of units',raw.units ? String(result.units) : 'Unknown'],
     ['Purchase price',knownMoney(raw,'purchasePrice',result.purchasePrice)],['Estimated current value',knownMoney(raw,'currentValue',result.currentValue)],['After-repair value',knownMoney(raw,'afterRepairValue',result.afterRepairValue)],
     ['Renovation budget',knownMoney(raw,'renovationBudget',result.renovationBudget)],['Total project cost',raw.purchasePrice ? money(result.totalProjectCost) : 'Unknown']
   ];
@@ -50,18 +52,19 @@ function update() {
     ['Break-even occupancy',pct(result.breakEvenOccupancy)],['Price per unit',raw.purchasePrice && raw.units ? money(result.pricePerUnit) : 'Unknown']
   ];
   document.querySelector('#summary-groups').innerHTML = group('Property summary',propertyRows)+group('Financing summary',financingRows)+group('Performance summary',performanceRows);
-  document.querySelector('#result-address').textContent = knownText(raw.propertyAddress,'Property address unknown');
+  document.querySelector('#result-address').textContent = knownText(address,'Property address unknown');
   document.querySelector('#generated-at').textContent = `Generated ${generated.toLocaleString()}`;
   const grade = document.querySelector('#deal-grade'); grade.className=`deal-grade grade-${assessment.code}`; grade.textContent=assessment.label;
   bullets('#why-list',assessment.why); bullets('#risk-list',assessment.risks); bullets('#missing-list',assessment.missing.length ? assessment.missing : ['No listed information gaps; independently verify all deal information']);
   document.querySelector('#recommendation').textContent=assessment.recommendation;
-  const warning = document.querySelector('#subject-report-warning'); warning.hidden=result.financingType!=='subjectTo'; warning.textContent=subjectWarning;
+  const needsWarning = ['subjectTo', 'existingPlusSeller'].includes(result.financingType);
+  const warning = document.querySelector('#subject-report-warning'); warning.hidden=!needsWarning; warning.textContent=subjectWarning;
   const textGroup=(title,rows)=>`${title.toUpperCase()}\n${rows.map(([a,b])=>`${a}: ${b}`).join('\n')}`;
-  copyText = `TAKEOVER DEAL HUNTER\nDEAL SUMMARY & RECOMMENDATION\nGenerated: ${generated.toLocaleString()}\n\n${textGroup('Property summary',propertyRows)}\n\n${textGroup('Financing summary',financingRows)}\n\n${textGroup('Performance summary',performanceRows)}\n\nOVERALL DEAL GRADE\n${assessment.label}\n\nWHY THIS DEAL MAY WORK\n${assessment.why.map(x=>`• ${x}`).join('\n')}\n\nMAIN RISKS\n${assessment.risks.map(x=>`• ${x}`).join('\n')}\n\nINFORMATION STILL NEEDED\n${(assessment.missing.length?assessment.missing:['No listed information gaps; independently verify all deal information']).map(x=>`• ${x}`).join('\n')}\n\nRECOMMENDED NEXT ACTION\n${assessment.recommendation}${result.financingType==='subjectTo'?`\n\nSUBJECT-TO WARNING\n${subjectWarning}`:''}\n\nPreliminary investment analysis. All financial, loan, title, legal, property-condition, and rental information must be independently verified before purchase.`;
+  copyText = `TAKEOVER DEAL HUNTER\nDEAL SUMMARY & RECOMMENDATION\nGenerated: ${generated.toLocaleString()}\n\n${textGroup('Property summary',propertyRows)}\n\n${textGroup('Financing summary',financingRows)}\n\n${textGroup('Performance summary',performanceRows)}\n\nOVERALL DEAL GRADE\n${assessment.label}\n\nWHY THIS DEAL MAY WORK\n${assessment.why.map(x=>`• ${x}`).join('\n')}\n\nMAIN RISKS\n${assessment.risks.map(x=>`• ${x}`).join('\n')}\n\nINFORMATION STILL NEEDED\n${(assessment.missing.length?assessment.missing:['No listed information gaps; independently verify all deal information']).map(x=>`• ${x}`).join('\n')}\n\nRECOMMENDED NEXT ACTION\n${assessment.recommendation}${needsWarning?`\n\nSUBJECT-TO WARNING\n${subjectWarning}`:''}\n\nPreliminary investment analysis. All financial, loan, title, legal, property-condition, and rental information must be independently verified before purchase.`;
   report.hidden=false;
 }
 
-const sample = {propertyAddress:'418 Oakridge Avenue, Dayton, OH',propertyType:'2–4 Units',units:2,purchasePrice:285000,currentValue:310000,afterRepairValue:335000,renovationBudget:12000,closingCosts:4500,operatingReserves:6000,rentalIncome:3400,otherIncome:100,vacancy:5,propertyTaxes:310,insurance:145,utilities:100,maintenance:200,management:0,capex:175,hoa:0,financingType:'subjectTo',downPayment:0,existingMortgageBalance:228000,interestRate:3.25,remainingAmortization:25,existingMonthlyPayment:1111,sellerFinancedAmount:0,sellerInterestRate:0,sellerAmortization:0,sellerBalloonTerm:0,sellerCashRequired:18000,mortgageArrears:0,delinquentTaxes:0,assumptionFee:0,targetCapRate:8,targetCashFlow:500,targetCoc:12,maxCashToClose:45000};
+const sample = {propertyAddress:'418 Oakridge Avenue',propertyCity:'Dayton',propertyState:'OH',propertyZip:'45402',propertyType:'2–4 Units',units:2,purchasePrice:285000,currentValue:310000,afterRepairValue:335000,renovationBudget:12000,closingCosts:4500,operatingReserves:6000,rentalIncome:3400,otherIncome:100,vacancy:5,propertyTaxes:310,insurance:145,utilities:100,maintenance:200,management:0,capex:175,hoa:0,financingType:'subjectTo',downPayment:0,existingMortgageBalance:228000,interestRate:3.25,remainingAmortization:25,existingMonthlyPayment:1111,sellerFinancedAmount:0,sellerInterestRate:0,sellerAmortization:0,sellerBalloonTerm:0,sellerCashRequired:18000,mortgageArrears:0,delinquentTaxes:0,assumptionFee:0,targetCapRate:8,targetCashFlow:500,targetCoc:12,maxCashToClose:45000};
 function loadSample(){inputs.forEach(input => {if(input.type==='checkbox') input.checked=false; else input.value=sample[input.id] ?? ''});hasCalculated=true;update();report.scrollIntoView({behavior:'smooth',block:'start'})}
 function resetDeal(){form.reset();hasCalculated=false;report.hidden=true;document.querySelector('#copy-status').textContent='';document.querySelector('#analyzer').scrollIntoView({behavior:'smooth'})}
 form.addEventListener('submit',event=>{event.preventDefault();hasCalculated=true;update();if(!report.hidden)report.scrollIntoView({behavior:'smooth',block:'start'})});
@@ -72,3 +75,9 @@ document.querySelector('#print-button').addEventListener('click',()=>{update();w
 document.querySelector('#edit-button').addEventListener('click',()=>document.querySelector('.input-column').scrollIntoView({behavior:'smooth',block:'start'}));
 document.querySelector('#reset-deal-button').addEventListener('click',resetDeal);
 document.querySelector('#copy-button').addEventListener('click',async()=>{const status=document.querySelector('#copy-status');try{await navigator.clipboard.writeText(copyText);status.textContent='Summary copied.'}catch{status.textContent='Clipboard unavailable. Select and copy the report manually.'}});
+
+const updateStructureWarning = () => { document.querySelector('#subject-warning').hidden = !['subjectTo', 'existingPlusSeller'].includes(form.elements.financingType.value); };
+form.addEventListener('input', updateStructureWarning);
+form.addEventListener('reset', () => requestAnimationFrame(updateStructureWarning));
+document.querySelector('#sample-button').addEventListener('click', updateStructureWarning);
+initSavedDeals({ form, readValues: rawValues, recalculate: () => { hasCalculated = true; update(); } });
