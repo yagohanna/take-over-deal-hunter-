@@ -1,5 +1,8 @@
 import { calculateDeal, assessDeal } from './calculator.js';
 import { initSavedDeals } from './saved-deals.js';
+import { API_BASE_URL } from './config.js';
+
+document.querySelector('#workspace-link').href = `${API_BASE_URL}/workspace`;
 
 const form = document.querySelector('#deal-form');
 const inputs = [...form.querySelectorAll('input, select')];
